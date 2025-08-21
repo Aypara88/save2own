@@ -9,6 +9,7 @@ import { AuthProvider } from "@/providers/auth-provider";
 import { WalletProvider } from "@/providers/wallet-provider";
 import { SavingsProvider } from "@/providers/savings-provider";
 import { FavoritesProvider } from "@/providers/favorites-provider";
+import { BackendProvider } from "@/providers/backend-provider";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -46,15 +47,17 @@ export default function RootLayout() {
           backgroundColor="#059669"
           translucent={false}
         />
-        <AuthProvider>
-          <WalletProvider>
-            <SavingsProvider>
-              <FavoritesProvider>
-                <RootLayoutNav />
-              </FavoritesProvider>
-            </SavingsProvider>
-          </WalletProvider>
-        </AuthProvider>
+        <BackendProvider>
+          <AuthProvider>
+            <WalletProvider>
+              <SavingsProvider>
+                <FavoritesProvider>
+                  <RootLayoutNav />
+                </FavoritesProvider>
+              </SavingsProvider>
+            </WalletProvider>
+          </AuthProvider>
+        </BackendProvider>
       </GestureHandlerRootView>
     </QueryClientProvider>
   );

@@ -12,16 +12,20 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { Search, SlidersHorizontal, Star, Heart, ShoppingCart, Sparkles } from "lucide-react-native";
+import { Search, SlidersHorizontal, Star, Heart, Sparkles } from "lucide-react-native";
 import { products, Product } from "@/data/products";
 import { LinearGradient } from "expo-linear-gradient";
 import { formatCurrency } from "@/utils/format";
 import { useFavorites } from "@/providers/favorites-provider";
+import { useBackend } from "@/providers/backend-provider";
+import { useProductsQuery } from "@/utils/queries";
 
 export default function MarketplaceScreen() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const { favorites, toggleFavorite, isFavorite } = useFavorites();
+  const { apiHealthy, apiBaseUrl } = useBackend();
+  const productsQuery = useProductsQuery(searchQuery, selectedCategory);
 
   const categories = [
     { id: "All", name: "All", icon: "🛍️" },
@@ -39,6 +43,10 @@ export default function MarketplaceScreen() {
       selectedCategory === "All" || product.category === selectedCategory;
     return matchesSearch && matchesCategory;
   }), [searchQuery, selectedCategory]);
+
+  const backendProducts: Product[] = productsQuery.data ?? [];
+  const showBackend = apiHealthy && backendProducts.length > 0;
+  const items: Product[] = showBackend ? backendProducts : filteredProducts;
 
   const handleStartSaving = (product: any) => {
     router.push({
@@ -183,6 +191,12 @@ export default function MarketplaceScreen() {
       </View>
 
       <View style={styles.categoriesContainer}>
+        {!apiHealthy && (
+          <View style={styles.backendNotice} testID="backend-notice">
+            <View style={styles.dotWarn} />
+            <Text style={styles.noticeText}>Backend disabled. Using demo products.</Text>
+          </View>
+        )}
         <FlatList
           data={categories}
           renderItem={renderCategory}
@@ -195,7 +209,7 @@ export default function MarketplaceScreen() {
 
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.productsGrid}>
-          {filteredProducts.map((product) => (
+          {items.map((product) => (
             <TouchableOpacity
               key={product.id}
               style={styles.productCard}
@@ -346,6 +360,24 @@ const styles = StyleSheet.create({
   },
   categoryTextActive: {
     color: "#fff",
+  },
+  backendNotice: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginHorizontal: 20,
+    marginBottom: 8,
+  },
+  dotWarn: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#F59E0B',
+  },
+  noticeText: {
+    color: '#92400E',
+    fontSize: 12,
+    fontWeight: '600',
   },
   productsGrid: {
     flexDirection: "row",
